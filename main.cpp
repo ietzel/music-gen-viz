@@ -351,11 +351,9 @@ class MidiFile {
 };
 
 
-int main() {
-  system("g++ main_old.cc -o main_(old)"); // Compile other_file.cpp
-  system("./main_old");
-  return 0;
-}
+system("g++ main_old.cc -o main_(old)");
+system("./main_old");
+
 
 class olcMIDIViewer: public olc::PixelGameEngine {
   public: olcMIDIViewer() {
