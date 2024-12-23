@@ -4,6 +4,8 @@
 #include <fstream>
 #include <array>
 
+#pragma comment(lib, "winmm.lib")
+
 struct MidiEvent {
   enum class Type {
     NoteOff,
@@ -62,7 +64,9 @@ class MidiFile {
       MetaSequencerSpecific = 0x7F,
   };
 
-  public: MidiFile() {}
+  public: MidiFile() {
+    
+  }
 
   MidiFile(const std::string & sFileName) {
     ParseFile(sFileName);
@@ -77,6 +81,7 @@ class MidiFile {
     ifs.open(sFileName, std::fstream::in | std::ios::binary);
     if (!ifs.is_open())
       return false;
+
     auto Swap32 = [](uint32_t n) {
       return (((n >> 24) & 0xff) | ((n << 8) & 0xff0000) | ((n >> 8) & 0xff00) | ((n << 24) & 0xff000000));
     };
@@ -98,23 +103,19 @@ class MidiFile {
       nValue = ifs.get();
 
       if (nValue & 0x80) {
-
         nValue &= 0x7F;
         do {
           nByte = ifs.get();
           nValue = (nValue << 7) | (nByte & 0x7F);
         }
-        while (nByte & 0x80); // Loop whilst read byte MSB is 1
+        while (nByte & 0x80);
       }
-
-      // Return final construction (always 32-bit unsigned integer internally)
       return nValue;
     };
 
     uint32_t n32 = 0;
     uint16_t n16 = 0;
 
-    // Read MIDI Header (Fixed Size)
     ifs.read((char * ) & n32, sizeof(uint32_t));
     uint32_t nFileID = Swap32(n32);
     ifs.read((char * ) & n32, sizeof(uint32_t));
@@ -128,7 +129,6 @@ class MidiFile {
 
     for (uint16_t nChunk = 0; nChunk < nTrackChunks; nChunk++) {
       std::cout << "===== NEW TRACK" << std::endl;
-      // Read Track Header
       ifs.read((char * ) & n32, sizeof(uint32_t));
       uint32_t nTrackID = Swap32(n32);
       ifs.read((char * ) & n32, sizeof(uint32_t));
@@ -143,36 +143,15 @@ class MidiFile {
       uint8_t nPreviousStatus = 0;
 
       while (!ifs.eof() && !bEndOfTrack) {
-        // Fundamentally all MIDI Events contain a timecode, and a status byte*
         uint32_t nStatusTimeDelta = 0;
         uint8_t nStatus = 0;
 
-        // Read Timecode from MIDI stream. This could be variable in length
-        // and is the delta in "ticks" from the previous event. Of course this value
-        // could be 0 if two events happen simultaneously.
         nStatusTimeDelta = ReadValue();
 
-        // Read first byte of message, this could be the status byte, or it could not...
         nStatus = ifs.get();
 
-        // All MIDI Status events have the MSB set. The data within a standard MIDI event
-        // does not. A crude yet utilised form of compression is to omit sending status
-        // bytes if the following sequence of events all refer to the same MIDI Status.
-        // This is called MIDI Running Status, and is essential to succesful decoding of
-        // MIDI streams and files.
-        //
-        // If the MSB of the read byte was not set, and on the whole we were expecting a
-        // status byte, then Running Status is in effect, so we refer to the previous 
-        // confirmed status byte.
         if (nStatus < 0x80) {
-          // MIDI Running Status is happening, so refer to previous valid MIDI Status byte
           nStatus = nPreviousStatus;
-
-          // We had to read the byte to assess if MIDI Running Status is in effect. But!
-          // that read removed the byte form the stream, and that will desync all of the 
-          // following code because normally we would have read a status byte, but instead
-          // we have read the data contained within a MIDI message. The simple solution is 
-          // to put the byte back :P
           ifs.seekg(-1, std::ios_base::cur);
         }
 
@@ -249,7 +228,6 @@ class MidiFile {
           nPreviousStatus = 0;
 
           if (nStatus == 0xFF) {
-            // Meta Message
             uint8_t nType = ifs.get();
             uint8_t nLength = ReadValue();
 
@@ -287,7 +265,6 @@ class MidiFile {
               bEndOfTrack = true;
               break;
             case MetaSetTempo:
-              // Tempo is in microseconds per quarter note	
               if (m_nTempo == 0) {
                 (m_nTempo |= (ifs.get() << 16));
                 (m_nTempo |= (ifs.get() << 8));
@@ -302,8 +279,6 @@ class MidiFile {
             case MetaTimeSignature:
               std::cout << "Time Signature: " << ifs.get() << "/" << (2 << ifs.get()) << std::endl;
               std::cout << "ClocksPerTick: " << ifs.get() << std::endl;
-
-              // A MIDI "Beat" is 24 ticks, so specify how many 32nd notes constitute a beat
               std::cout << "32per24Clocks: " << ifs.get() << std::endl;
               break;
             case MetaKeySignature:
@@ -319,12 +294,10 @@ class MidiFile {
           }
 
           if (nStatus == 0xF0) {
-            // System Exclusive Message Begin
             std::cout << "System Exclusive Begin: " << ReadString(ReadValue()) << std::endl;
           }
 
           if (nStatus == 0xF7) {
-            // System Exclusive Message Begin
             std::cout << "System Exclusive End: " << ReadString(ReadValue()) << std::endl;
           }
         } else {
@@ -332,18 +305,17 @@ class MidiFile {
         }
       }
     }
-
-    // Convert Time Events to Notes
+    
     for (auto & track: vecTracks) {
       uint32_t nWallTime = 0;
 
-      std::list < MidiNote > listNotesBeingProcessed;
+      std::list<MidiNote> listNotesBeingProcessed;
 
       for (auto & event: track.vecEvents) {
+        
         nWallTime += event.nDeltaTick;
 
-        if (event.event == MidiEvent::Type::NoteOn) {
-          // New Note
+        if(event.event == MidiEvent::Type::NoteOn) {
           listNotesBeingProcessed.push_back({
             event.nKey,
             event.nVelocity,
@@ -351,7 +323,7 @@ class MidiFile {
             0
           });
         }
-
+        
         if (event.event == MidiEvent::Type::NoteOff) {
           auto note = std::find_if(listNotesBeingProcessed.begin(), listNotesBeingProcessed.end(), [ & ](const MidiNote & n) {
             return n.nKey == event.nKey;
@@ -366,11 +338,11 @@ class MidiFile {
         }
       }
     }
-
+    
     return true;
   }
 
-  public: std::vector < MidiTrack > vecTracks;
+  public: std::vector<MidiTrack> vecTracks;
   uint32_t m_nTempo = 0;
   uint32_t m_nBPM = 0;
 
@@ -383,7 +355,7 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 
   MidiFile midi;
 
-  //HMIDIOUT hInstrument;
+  HMIDIOUT hInstrument;
   size_t nCurrentNote[16] {
     0
   };
@@ -393,20 +365,14 @@ class olcMIDIViewer: public olc::PixelGameEngine {
   uint32_t nMidiClock = 0;
 
   public: bool OnUserCreate() override {
-
-    midi.ParseFile("ff7_battle.mid");
-
-    /*
-    int nMidiDevices = midiOutGetNumDevs();
-    if (nMidiDevices > 0)
-    {
-    	if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR)
-    	{
-    		std::cout << "Opened midi" << std::endl;
-    	}
+    midi.ParseFile("audio and or visual/Holiday.mid");
+    /*int nMidiDevices = midiOutGetNumDevs();
+    if (nMidiDevices > 0) {
+      if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
+        std::cout << "Opened midi" << std::endl;
+      }
     }
     */
-
     return true;
   }
 
@@ -418,8 +384,8 @@ class olcMIDIViewer: public olc::PixelGameEngine {
     uint32_t nNoteHeight = 2;
     uint32_t nOffsetY = 0;
 
-    if (GetKey(olc::Key::LEFT).bHeld) nTrackOffset -= 10000.0 f * fElapsedTime;
-    if (GetKey(olc::Key::RIGHT).bHeld) nTrackOffset += 10000.0 f * fElapsedTime;
+    if (GetKey(olc::Key::LEFT).bHeld) nTrackOffset -= 10000.0 * fElapsedTime;
+    if (GetKey(olc::Key::RIGHT).bHeld) nTrackOffset += 10000.0 * fElapsedTime;
 
     for (auto & track: midi.vecTracks) {
       if (!track.vecNotes.empty()) {
@@ -431,16 +397,56 @@ class olcMIDIViewer: public olc::PixelGameEngine {
         for (auto & note: track.vecNotes) {
           FillRect((note.nStartTime - nTrackOffset) / nTimePerColumn, (nNoteRange - (note.nKey - track.nMinNote)) * nNoteHeight + nOffsetY, note.nDuration / nTimePerColumn, nNoteHeight, olc::WHITE);
         }
+
         nOffsetY += (nNoteRange + 1) * nNoteHeight + 4;
       }
     }
+    
+    dRunTime += fElapsedTime;
+    uint32_t nTempo = 4;
+    int nTrack = 1;
+    while (dRunTime >= 1.0 / double(midi.m_nBPM * 8)) {
+      dRunTime -= 1.0 / double(midi.m_nBPM * 8);
+      nMidiClock++;
+
+      int i = 0;
+      int nTrack = 1;
+      for (nTrack = 1; nTrack < 3; nTrack++) {
+        if (nCurrentNote[nTrack] < midi.vecTracks[nTrack].vecEvents.size()) {
+          if (midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nDeltaTick == 0) {
+            uint32_t nStatus = 0;
+            uint32_t nNote = midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nKey;
+            uint32_t nVelocity = midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nVelocity;
+
+            if (midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].event == MidiEvent::Type::NoteOn)
+              nStatus = 0x90;
+            else
+              nStatus = 0x80;
+
+            //midiOutShortMsg(hInstrument, (nVelocity << 16) | (nNote << 8) | nStatus);
+            nCurrentNote[nTrack]++;
+          } else
+            midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nDeltaTick--;
+        }
+      }
+    }
+  
+    if (GetKey(olc::Key::SPACE).bPressed) {
+      midiOutShortMsg(hInstrument, 0x00403C90);
+    }
+
+    if (GetKey(olc::Key::SPACE).bReleased) {
+      //midiOutShortMsg(hInstrument, 0x00003C80);
+    }
+
     return true;
   }
+
 };
 
-int main() {
+int wmain() {
   olcMIDIViewer demo;
-  if (demo.Construct(1280, 960, 1, 1))
+  if (demo.Construct(1200, 800, 1, 1))
     demo.Start();
   return 0;
 }
