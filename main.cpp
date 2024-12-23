@@ -350,6 +350,13 @@ class MidiFile {
 
 };
 
+
+int main() {
+  system("g++ main_old.cc -o main_(old)"); // Compile other_file.cpp
+  system("./main_old");
+  return 0;
+}
+
 class olcMIDIViewer: public olc::PixelGameEngine {
   public: olcMIDIViewer() {
     sAppName = "MIDI File Viewer";
@@ -366,8 +373,10 @@ class olcMIDIViewer: public olc::PixelGameEngine {
   double dRunTime = 0.0;
   uint32_t nMidiClock = 0;
 
+
+
   public: bool OnUserCreate() override {
-    midi.ParseFile("test.mid");
+    midi.ParseFile("old/test.mid");
     /*int nMidiDevices = midiOutGetNumDevs();
     if (nMidiDevices > 0) {
       if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
@@ -376,12 +385,6 @@ class olcMIDIViewer: public olc::PixelGameEngine {
     }
     */
     return true;
-  }
-
-  int main() {
-    system("g++ main_old.cc -o main_(old)"); // Compile other_file.cpp
-    system("./main_old");
-    return 0;
   }
 
   float nTrackOffset = 1000;
