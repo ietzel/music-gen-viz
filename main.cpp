@@ -3,8 +3,10 @@
 #include "olcPixelGameEngine.h"
 #include <fstream>
 #include <array>
+#include <iostream>
+#include <cstdlib>
+#include "old/main_(old).cc"
 
-#pragma comment(lib, "winmm.lib")
 
 struct MidiEvent {
   enum class Type {
@@ -365,7 +367,7 @@ class olcMIDIViewer: public olc::PixelGameEngine {
   uint32_t nMidiClock = 0;
 
   public: bool OnUserCreate() override {
-    midi.ParseFile("audio and or visual/Holiday.mid");
+    midi.ParseFile("test.mid");
     /*int nMidiDevices = midiOutGetNumDevs();
     if (nMidiDevices > 0) {
       if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
@@ -374,6 +376,12 @@ class olcMIDIViewer: public olc::PixelGameEngine {
     }
     */
     return true;
+  }
+
+  int main() {
+    system("g++ main_old.cc -o main_(old)"); // Compile other_file.cpp
+    system("./main_old");
+    return 0;
   }
 
   float nTrackOffset = 1000;
@@ -432,7 +440,7 @@ class olcMIDIViewer: public olc::PixelGameEngine {
     }
   
     if (GetKey(olc::Key::SPACE).bPressed) {
-      midiOutShortMsg(hInstrument, 0x00403C90);
+      //midiOutShortMsg(hInstrument, 0x00403C90);
     }
 
     if (GetKey(olc::Key::SPACE).bReleased) {
