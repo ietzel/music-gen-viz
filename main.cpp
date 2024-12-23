@@ -351,10 +351,6 @@ class MidiFile {
 };
 
 
-system("g++ main_old.cc -o main_(old)");
-system("./main_old");
-
-
 class olcMIDIViewer: public olc::PixelGameEngine {
   public: olcMIDIViewer() {
     sAppName = "MIDI File Viewer";
@@ -454,6 +450,8 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 };
 
 int wmain() {
+  system("g++ main_old.cc -o main_(old)");
+  system("./main_old");
   olcMIDIViewer demo;
   if (demo.Construct(1200, 800, 1, 1))
     demo.Start();
