@@ -370,7 +370,7 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 
 
   public: bool OnUserCreate() override {
-    midi.ParseFile("old/test.mid");
+    midi.ParseFile("test.mid");
     /*int nMidiDevices = midiOutGetNumDevs();
     if (nMidiDevices > 0) {
       if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
@@ -422,7 +422,6 @@ class olcMIDIViewer: public olc::PixelGameEngine {
             uint32_t nStatus = 0;
             uint32_t nNote = midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nKey;
             uint32_t nVelocity = midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nVelocity;
-
             if (midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].event == MidiEvent::Type::NoteOn)
               nStatus = 0x90;
             else
@@ -450,8 +449,8 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 };
 
 int wmain() {
-  system("g++ main_old.cc -o main_(old)");
-  system("./main_old");
+  system("g++ old/main_(old).cc -o main_(old)");
+  system("./main_(old).exe");
   olcMIDIViewer demo;
   if (demo.Construct(1200, 800, 1, 1))
     demo.Start();
