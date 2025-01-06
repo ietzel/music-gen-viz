@@ -16,7 +16,8 @@
                 "-lgdiplus", 
                 "-lShlwapi", 
                 "-ldwmapi", 
-                "-lstdc++fs", 
+                "-lstdc++fs",
+                "-lwinmm", 
                 "-static", 
                 "-std=c++17", 
                 "-municode"

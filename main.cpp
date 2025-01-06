@@ -371,13 +371,13 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 
   public: bool OnUserCreate() override {
     midi.ParseFile("audio and or visual/phonk.mid");
-    /*int nMidiDevices = midiOutGetNumDevs();
+    int nMidiDevices = midiOutGetNumDevs();
     if (nMidiDevices > 0) {
       if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
         std::cout << "Opened midi" << std::endl;
       }
     }
-    */
+    
     return true;
   }
 
@@ -427,7 +427,7 @@ class olcMIDIViewer: public olc::PixelGameEngine {
             else
               nStatus = 0x80;
 
-            //midiOutShortMsg(hInstrument, (nVelocity << 16) | (nNote << 8) | nStatus);
+            midiOutShortMsg(hInstrument, (nVelocity << 16) | (nNote << 8) | nStatus);
             nCurrentNote[nTrack]++;
           } else
             midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nDeltaTick--;
@@ -436,11 +436,11 @@ class olcMIDIViewer: public olc::PixelGameEngine {
     }
   
     if (GetKey(olc::Key::SPACE).bPressed) {
-      //midiOutShortMsg(hInstrument, 0x00403C90);
+      midiOutShortMsg(hInstrument, 0x00403C90);
     }
 
     if (GetKey(olc::Key::SPACE).bReleased) {
-      //midiOutShortMsg(hInstrument, 0x00003C80);
+      midiOutShortMsg(hInstrument, 0x00003C80);
     }
 
     return true;
