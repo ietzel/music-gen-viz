@@ -9,7 +9,17 @@
                 "-g",
                 "${file}",
                 "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+                "${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "-luser32",
+                "-lgdi32",
+                "-lopengl32", 
+                "-lgdiplus", 
+                "-lShlwapi", 
+                "-ldwmapi", 
+                "-lstdc++fs", 
+                "-static", 
+                "-std=c++17", 
+                "-municode"
             ],
             "options": {
                 "cwd": "${fileDirname}"

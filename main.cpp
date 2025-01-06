@@ -5,7 +5,7 @@
 #include <array>
 #include <iostream>
 #include <cstdlib>
-#include "old/main_(old).cc"
+//#include "old/main_(old).cc"
 
 
 struct MidiEvent {
@@ -30,8 +30,8 @@ struct MidiNote {
 struct MidiTrack {
   std::string sName;
   std::string sInstrument;
-  std::vector < MidiEvent > vecEvents;
-  std::vector < MidiNote > vecNotes;
+  std::vector <MidiEvent> vecEvents;
+  std::vector <MidiNote> vecNotes;
   uint8_t nMaxNote = 64;
   uint8_t nMinNote = 64;
 };
@@ -370,7 +370,7 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 
 
   public: bool OnUserCreate() override {
-    midi.ParseFile("test.mid");
+    midi.ParseFile("audio and or visual/phonk.mid");
     /*int nMidiDevices = midiOutGetNumDevs();
     if (nMidiDevices > 0) {
       if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
@@ -449,8 +449,8 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 };
 
 int wmain() {
-  system("g++ old/main_(old).cc -o main_(old)");
-  system("./main_(old).exe");
+  //system("g++ old/main_(old).cc -o main_(old)");
+  //system("./main_(old).exe");
   olcMIDIViewer demo;
   if (demo.Construct(1200, 800, 1, 1))
     demo.Start();
