@@ -81,7 +81,7 @@ class MidiFile {
   bool ParseFile(const std::string & sFileName) {
     std::ifstream ifs;
     ifs.open(sFileName, std::fstream::in | std::ios::binary);
-    if (!ifs.is_open())
+    if(!ifs.is_open())
       return false;
 
     auto Swap32 = [](uint32_t n) {
@@ -94,7 +94,7 @@ class MidiFile {
 
     auto ReadString = [ & ifs](uint32_t nLength) {
       std::string s;
-      for (uint32_t i = 0; i < nLength; i++) s += ifs.get();
+      for(uint32_t i = 0; i < nLength; i++) s += ifs.get();
       return s;
     };
 
@@ -104,7 +104,7 @@ class MidiFile {
 
       nValue = ifs.get();
 
-      if (nValue & 0x80) {
+      if(nValue & 0x80) {
         nValue &= 0x7F;
         do {
           nByte = ifs.get();
@@ -129,7 +129,7 @@ class MidiFile {
     ifs.read((char * ) & n16, sizeof(uint16_t));
     uint16_t nDivision = Swap16(n16);
 
-    for (uint16_t nChunk = 0; nChunk < nTrackChunks; nChunk++) {
+    for(uint16_t nChunk = 0; nChunk < nTrackChunks; nChunk++) {
       std::cout << "===== NEW TRACK" << std::endl;
       ifs.read((char * ) & n32, sizeof(uint32_t));
       uint32_t nTrackID = Swap32(n32);
@@ -152,12 +152,12 @@ class MidiFile {
 
         nStatus = ifs.get();
 
-        if (nStatus < 0x80) {
+        if(nStatus < 0x80) {
           nStatus = nPreviousStatus;
           ifs.seekg(-1, std::ios_base::cur);
         }
 
-        if ((nStatus & 0xF0) == EventName::VoiceNoteOff) {
+        if((nStatus & 0xF0) == EventName::VoiceNoteOff) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nNoteID = ifs.get();
@@ -168,12 +168,12 @@ class MidiFile {
             nNoteVelocity,
             nStatusTimeDelta
           });
-        } else if ((nStatus & 0xF0) == EventName::VoiceNoteOn) {
+        } else if((nStatus & 0xF0) == EventName::VoiceNoteOn) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nNoteID = ifs.get();
           uint8_t nNoteVelocity = ifs.get();
-          if (nNoteVelocity == 0)
+          if(nNoteVelocity == 0)
             vecTracks[nChunk].vecEvents.push_back({
               MidiEvent::Type::NoteOff,
               nNoteID,
@@ -187,7 +187,7 @@ class MidiFile {
               nNoteVelocity,
               nStatusTimeDelta
             });
-        } else if ((nStatus & 0xF0) == EventName::VoiceAftertouch) {
+        } else if((nStatus & 0xF0) == EventName::VoiceAftertouch) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nNoteID = ifs.get();
@@ -195,7 +195,7 @@ class MidiFile {
           vecTracks[nChunk].vecEvents.push_back({
             MidiEvent::Type::Other
           });
-        } else if ((nStatus & 0xF0) == EventName::VoiceControlChange) {
+        } else if((nStatus & 0xF0) == EventName::VoiceControlChange) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nControlID = ifs.get();
@@ -203,21 +203,21 @@ class MidiFile {
           vecTracks[nChunk].vecEvents.push_back({
             MidiEvent::Type::Other
           });
-        } else if ((nStatus & 0xF0) == EventName::VoiceProgramChange) {
+        } else if((nStatus & 0xF0) == EventName::VoiceProgramChange) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nProgramID = ifs.get();
           vecTracks[nChunk].vecEvents.push_back({
             MidiEvent::Type::Other
           });
-        } else if ((nStatus & 0xF0) == EventName::VoiceChannelPressure) {
+        } else if((nStatus & 0xF0) == EventName::VoiceChannelPressure) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nChannelPressure = ifs.get();
           vecTracks[nChunk].vecEvents.push_back({
             MidiEvent::Type::Other
           });
-        } else if ((nStatus & 0xF0) == EventName::VoicePitchBend) {
+        } else if((nStatus & 0xF0) == EventName::VoicePitchBend) {
           nPreviousStatus = nStatus;
           uint8_t nChannel = nStatus & 0x0F;
           uint8_t nLS7B = ifs.get();
@@ -226,10 +226,10 @@ class MidiFile {
             MidiEvent::Type::Other
           });
 
-        } else if ((nStatus & 0xF0) == EventName::SystemExclusive) {
+        } else if((nStatus & 0xF0) == EventName::SystemExclusive) {
           nPreviousStatus = 0;
 
-          if (nStatus == 0xFF) {
+          if(nStatus == 0xFF) {
             uint8_t nType = ifs.get();
             uint8_t nLength = ReadValue();
 
@@ -267,7 +267,7 @@ class MidiFile {
               bEndOfTrack = true;
               break;
             case MetaSetTempo:
-              if (m_nTempo == 0) {
+              if(m_nTempo == 0) {
                 (m_nTempo |= (ifs.get() << 16));
                 (m_nTempo |= (ifs.get() << 8));
                 (m_nTempo |= (ifs.get() << 0));
@@ -295,11 +295,11 @@ class MidiFile {
             }
           }
 
-          if (nStatus == 0xF0) {
+          if(nStatus == 0xF0) {
             std::cout << "System Exclusive Begin: " << ReadString(ReadValue()) << std::endl;
           }
 
-          if (nStatus == 0xF7) {
+          if(nStatus == 0xF7) {
             std::cout << "System Exclusive End: " << ReadString(ReadValue()) << std::endl;
           }
         } else {
@@ -308,12 +308,12 @@ class MidiFile {
       }
     }
     
-    for (auto & track: vecTracks) {
+    for(auto & track: vecTracks) {
       uint32_t nWallTime = 0;
 
       std::list<MidiNote> listNotesBeingProcessed;
 
-      for (auto & event: track.vecEvents) {
+      for(auto & event: track.vecEvents) {
         
         nWallTime += event.nDeltaTick;
 
@@ -326,11 +326,11 @@ class MidiFile {
           });
         }
         
-        if (event.event == MidiEvent::Type::NoteOff) {
+        if(event.event == MidiEvent::Type::NoteOff) {
           auto note = std::find_if(listNotesBeingProcessed.begin(), listNotesBeingProcessed.end(), [ & ](const MidiNote & n) {
             return n.nKey == event.nKey;
           });
-          if (note != listNotesBeingProcessed.end()) {
+          if(note != listNotesBeingProcessed.end()) {
             note -> nDuration = nWallTime - note -> nStartTime;
             track.vecNotes.push_back( * note);
             track.nMinNote = std::min(track.nMinNote, note -> nKey);
@@ -370,10 +370,17 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 
 
   public: bool OnUserCreate() override {
-    midi.ParseFile("audio and or visual/phonk.mid");
+    unsigned int devCount = midiOutGetNumDevs();
+    std::cout << devCount << " MIDI devices connected:" << std::endl;
+    MIDIOUTCAPS inputCapabilities;
+    for (unsigned int i = 0; i < devCount; i++) {
+        midiOutGetDevCaps(i, &inputCapabilities, sizeof(inputCapabilities));
+        std::cout << "[" << i << "] " << inputCapabilities.szPname << std::endl;
+    }
+    midi.ParseFile("audio and or visual/K-Pop.mid");
     int nMidiDevices = midiOutGetNumDevs();
-    if (nMidiDevices > 0) {
-      if (midiOutOpen(&hInstrument, 2, NULL, 0, NULL) == MMSYSERR_NOERROR) {
+    if(nMidiDevices > 0) {
+      if(midiOutOpen(&hInstrument, 1, NULL, 0, NULL) == MMSYSERR_NOERROR) {
         std::cout << "Opened midi" << std::endl;
       }
     }
@@ -389,17 +396,17 @@ class olcMIDIViewer: public olc::PixelGameEngine {
     uint32_t nNoteHeight = 2;
     uint32_t nOffsetY = 0;
 
-    if (GetKey(olc::Key::LEFT).bHeld) nTrackOffset -= 10000.0 * fElapsedTime;
-    if (GetKey(olc::Key::RIGHT).bHeld) nTrackOffset += 10000.0 * fElapsedTime;
+    if(GetKey(olc::Key::LEFT).bHeld) nTrackOffset -= 10000.0 * fElapsedTime;
+    if(GetKey(olc::Key::RIGHT).bHeld) nTrackOffset += 10000.0 * fElapsedTime;
 
-    for (auto & track: midi.vecTracks) {
-      if (!track.vecNotes.empty()) {
+    for(auto & track: midi.vecTracks) {
+      if(!track.vecNotes.empty()) {
         uint32_t nNoteRange = track.nMaxNote - track.nMinNote;
 
         FillRect(0, nOffsetY, ScreenWidth(), (nNoteRange + 1) * nNoteHeight, olc::DARK_GREY);
         DrawString(1, nOffsetY + 1, track.sName);
 
-        for (auto & note: track.vecNotes) {
+        for(auto & note: track.vecNotes) {
           FillRect((note.nStartTime - nTrackOffset) / nTimePerColumn, (nNoteRange - (note.nKey - track.nMinNote)) * nNoteHeight + nOffsetY, note.nDuration / nTimePerColumn, nNoteHeight, olc::WHITE);
         }
 
@@ -416,13 +423,13 @@ class olcMIDIViewer: public olc::PixelGameEngine {
 
       int i = 0;
       int nTrack = 1;
-      for (nTrack = 1; nTrack < 3; nTrack++) {
-        if (nCurrentNote[nTrack] < midi.vecTracks[nTrack].vecEvents.size()) {
-          if (midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nDeltaTick == 0) {
+      for(nTrack = 1; nTrack < 3; nTrack++) {
+        if(nCurrentNote[nTrack] < midi.vecTracks[nTrack].vecEvents.size()) {
+          if(midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nDeltaTick == 0) {
             uint32_t nStatus = 0;
             uint32_t nNote = midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nKey;
             uint32_t nVelocity = midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].nVelocity;
-            if (midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].event == MidiEvent::Type::NoteOn)
+            if(midi.vecTracks[nTrack].vecEvents[nCurrentNote[nTrack]].event == MidiEvent::Type::NoteOn)
               nStatus = 0x90;
             else
               nStatus = 0x80;
@@ -435,11 +442,11 @@ class olcMIDIViewer: public olc::PixelGameEngine {
       }
     }
   
-    if (GetKey(olc::Key::SPACE).bPressed) {
+    if(GetKey(olc::Key::SPACE).bPressed) {
       midiOutShortMsg(hInstrument, 0x00403C90);
     }
 
-    if (GetKey(olc::Key::SPACE).bReleased) {
+    if(GetKey(olc::Key::SPACE).bReleased) {
       midiOutShortMsg(hInstrument, 0x00003C80);
     }
 
@@ -452,7 +459,7 @@ int wmain() {
   //system("g++ old/main_(old).cc -o main_(old)");
   //system("./main_(old).exe");
   olcMIDIViewer demo;
-  if (demo.Construct(1200, 800, 1, 1))
+  if(demo.Construct(1200, 800, 1, 1))
     demo.Start();
   return 0;
 }
